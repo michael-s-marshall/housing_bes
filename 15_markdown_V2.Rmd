@@ -20,13 +20,15 @@ Dependent variable and model:
 * Opposition to immigration measured on an 11-point scale from 0 (should allow many more immigrants) to 10 (should allow far fewer immigrants)  
 * Nested multilevel linear model with random intercepts for local authorities, with cross-level interactions between housing affordability and a) social renting and b) homeownership  
 * Affordability measured via the ratio of median house prices to median earnings in a local authority; as such, a higher number indicates less affordable housing  
+* Large amounts of missing data for two key individual level predictors: university educated, and income. As such, findings are presented for three models. The 'Main' model omits incomes and includes the age at which a respondent left education as a proxy for university education, thus maximising possible sample size. The 'Uni' model uses university education as a predictor instead of age left education, with missing observations removed via listwise deletion. And the 'Income' model includes income as a predictor, with missing values imputed via a Mincer regression model  
 
 Key findings:  
 
 * The association between affordability and opposition to immigration is conditional on tenure
-* A positive interaction exists between social renting and unaffordability  
-* A negative interaction exists between homeownership and unaffordability   
-* Findings robust to log transformation of affordability, using log of house prices as independent variable, and inclusion of regional dummies  
+* A positive interaction exists between social renting and unaffordability i.e. social renters in less affordable areas express stronger opposition to immigration  
+* A negative interaction exists between homeownership and unaffordability i.e. homeowners in less affordable areas express stronger support for immigration  
+* Findings are consistent across the Main, Uni and Income models  
+* Robustness checks include: using log transformation of affordability as independent variable; using log of house prices as independent variable; inclusion of dummy variable for region to ensure it's not just a 'London effect';   
 
 ```{r, include=TRUE}
 # plot
@@ -48,10 +50,10 @@ Dependent variable and model:
 
 Key findings:  
 
-* Positive association with social renting and homeownership  
 * Positive interaction between social renting and affordability i.e. social renters in less affordable areas more likely to see immigrants as a welfare state burden  
-* Interaction between social renting and affordability robust to using log of affordability, log of house prices, and inclusion of regional dummies  
 * No interaction with homeownership  
+* Interaction between social renting and affordability robust to the same robustness checks as described above  
+
 
 ```{r, include=TRUE}
 # plot
@@ -100,13 +102,15 @@ Data and modelling strategy:
 
 * Six waves of the British Election Study (BES) ranging from 2016-2021, filtered to respondents who participated in at least three waves  
 * Random effect within-between (REWB) model with two-way cross-classified structure i.e. random intercept for respondent and random intercept for local authority  
-* Cross-level interaction between between authority affordability and tenure (i.e. social renting and homeonwership, respectively)  
+* Cross-level interaction between tenure and the average affordability of a local authority across years (referred to as 'affordability between')  
+* The 'within' effect is the difference between affordability in an authority in a given year and average affordability in an authority across all years (i.e. 'affordability in year i authority j' - 'mean affordability in authority j'). This is 'affordability within', and tests for a *geotropic effect* i.e. the effect of living in an area of declining affordability irrespective of tenure  
 
 Key findings:  
 
 * Association of between affordability with opposition to immmigration is again contingent upon tenure, with the direction of the interactions consistent with the cross-sectional modelling, but only the interaction with social renting statistically significant  
 * Variation in affordability within local authorities not associated with the outcome variable; therefore, no evidence of geotropic effect  
-* Findings robust to: a) log scale of affordability as dependent variable, b) log house prices as dependent variable,  and c) including as an independent variable the change between censuses in the percentage of people degree educated in a local authority  
+* In sum, evidence suggests that differences *between* authorities in terms of affordability are more important for political attitudes than changes occurring *within* authorities over time  
+* Findings robust to robustness checks described above  
 
 ```{r, include=TRUE, results = 'asis'}
 immi_long <- readRDS("working/markdown_data/immi_int_long.RDS")
