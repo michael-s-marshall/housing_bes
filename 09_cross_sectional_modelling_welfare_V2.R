@@ -57,43 +57,51 @@ df_inc <- df %>%
 # modelling ------------------------------------------------------------------
 ###############################################################################
 
-# multivariate ------------------------------------------------
+# null model test ----------------------------------------------
 
-immig_multi <- glmer(immig_burden ~ male + white_british +
-                       no_religion + edu_20plus +
-                       social_housing + private_renting +
-                       homeowner + age +
-                       c1_c2 + d_e + non_uk_born +
-                       (1|LAD),
-                     data = df_immi, family = binomial("logit"))
+# null model
+immig_fit <- glm(immig_burden ~ 1, data = df_immi, family = "binomial")
 
-summary(immig_multi)
+# lmer null model
+immig_lmer <- glmer(immig_burden ~ (1|LAD), data = df_immi, 
+                    family = binomial("logit"))
 
-# including level 2 predictors  ------------------------------
+summ(immig_lmer)
 
-immig_con <- glmer(immig_burden ~ male + white_british +
-                     no_religion + edu_20plus +
-                     social_housing + private_renting +
-                     homeowner + age +
-                     c1_c2 + d_e + non_uk_born +
-                     affordability + gdp_capita +
-                     pop_sqm_2021 + foreign_per_1000 +
-                     over_65_pct + under_15_pct +
-                     degree_pct + manuf_pct +
-                     (1|LAD),
-                   data = df_immi, family = binomial("logit"))
+logLik(immig_fit)
+logLik(immig_lmer)
+2 * (logLik(immig_lmer) - logLik(immig_fit))
 
-summary(immig_con)
 
-anova(immig_multi, immig_con)
+# hypothesis vars only, testing improved fit from SH interaction --------------
 
-# cross level interaction ------------------------------------------------------
-
+# making interaction terms with scaled values
 df_immi <- df_immi %>% 
   mutate(social_housing.affordability = social_housing * affordability,
          homeowner.affordability = homeowner * affordability)
 
-immig_int <- glmer(immig_burden ~ social_housing + homeowner + private_renting +  
+immi_hypot <- glmer(immig_burden ~ homeowner.affordability +
+                      homeowner + affordability +
+                      (1|LAD),
+                   data = df_immi, family = binomial("logit"))
+
+summary(immi_hypot)
+
+immi_hypot_sh <- glmer(immig_burden ~ homeowner.affordability +
+                         social_housing.affordability +
+                         homeowner + affordability +
+                         social_housing +
+                         (1|LAD),
+                       data = df_immi, family = binomial("logit"))
+
+summary(immi_hypot_sh)
+
+# improvement in model fit is significant
+anova(immi_hypot, immi_hypot_sh)
+
+# including controls, testing for improvement from SH interaction -------------
+
+immig_hom <- glmer(immig_burden ~ social_housing + homeowner + private_renting +  
                      affordability +
                      male + white_british + 
                      no_religion + edu_20plus +
@@ -102,13 +110,28 @@ immig_int <- glmer(immig_burden ~ social_housing + homeowner + private_renting +
                      gdp_capita + pop_sqm_2021 + foreign_per_1000 + 
                      over_65_pct + under_15_pct + 
                      degree_pct + manuf_pct +
-                     social_housing.affordability + 
                      homeowner.affordability +
                      (1|LAD),
                    data = df_immi, family = binomial("logit"))
+summary(immig_hom)
+
+immig_int <- glmer(immig_burden ~ social_housing + homeowner + private_renting +  
+                    affordability +
+                    male + white_british + 
+                    no_religion + edu_20plus +
+                    age + 
+                    c1_c2 + d_e + non_uk_born + 
+                    gdp_capita + pop_sqm_2021 + foreign_per_1000 + 
+                    over_65_pct + under_15_pct + 
+                    degree_pct + manuf_pct +
+                    social_housing.affordability + # adding SH interaction
+                    homeowner.affordability +
+                    (1|LAD),
+                  data = df_immi, family = binomial("logit"))
 summary(immig_int)
 
-anova(immig_con, immig_int)
+# model fit is improved significantly according to chi square
+anova(immig_hom, immig_int)
 
 saveRDS(immig_int, file = "working/markdown_data/immig_burden_int.RDS")
 
@@ -130,12 +153,13 @@ df_immi_uni <- df_immi_uni %>%
 immig_uni <- glmer(immig_burden ~ social_housing.affordability +
                      homeowner.affordability +
                      social_housing + homeowner + affordability +
-                     male + white_british + no_religion + uni +
+                     male + white_british + no_religion + 
                      private_renting + age +
                      c1_c2 + d_e + non_uk_born +
                      gdp_capita + pop_sqm_2021 + foreign_per_1000 +
-                     over_65_pct + under_15_pct + degree_pct +
-                     manuf_pct + (1|LAD),
+                     over_65_pct + under_15_pct + degree_pct + manuf_pct + 
+                     uni + # adding uni
+                     (1|LAD),
                    data = df_immi_uni, family = binomial("logit"))
 summary(immig_uni)
 
@@ -197,13 +221,13 @@ df_inc <- df_inc %>%
 immi_inc <- glmer(immig_burden ~ social_housing.affordability +
                      homeowner.affordability +
                      social_housing + homeowner + affordability +
-                     income_full +
                      male + white_british + no_religion + edu_20plus +
                      private_renting + age +
                      c1_c2 + d_e + non_uk_born +
                      gdp_capita + pop_sqm_2021 + foreign_per_1000 +
-                     over_65_pct + under_15_pct + degree_pct +
-                     manuf_pct + (1|LAD),
+                     over_65_pct + under_15_pct + degree_pct + manuf_pct + 
+                     income_full + # adding income
+                     (1|LAD),
                    data = df_inc, family = binomial("logit"))
 summary(immi_inc)
 

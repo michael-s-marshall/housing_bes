@@ -79,7 +79,7 @@ readRDS("working/markdown_viz/coef_plot_equality.RDS")
 ## Table of cross-sectional modelling results
 
 ```{r, include=TRUE, results = 'asis'}
-immi_int <- readRDS("working/markdown_data/immi_tab.RDS")
+immi_int <- readRDS("working/markdown_data/immi_int.RDS")
 immi_bur <- readRDS("working/markdown_data/immig_burden_int.RDS")
 equal_int <- readRDS("working/markdown_data/equal_int.RDS")
 
@@ -107,7 +107,7 @@ Data and modelling strategy:
 
 Key findings:  
 
-* Association of between affordability with opposition to immmigration is again contingent upon tenure, with the direction of the interactions consistent with the cross-sectional modelling, but only the interaction with social renting statistically significant  
+* Association of between affordability with opposition to immigration is again contingent upon tenure, with the direction of the interactions consistent with the cross-sectional modelling, but only the interaction with social renting statistically significant  
 * Variation in affordability within local authorities not associated with the outcome variable; therefore, no evidence of geotropic effect  
 * In sum, evidence suggests that differences *between* authorities in terms of affordability are more important for political attitudes than changes occurring *within* authorities over time  
 * Findings robust to robustness checks described above  

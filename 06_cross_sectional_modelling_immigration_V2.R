@@ -114,43 +114,42 @@ immi_fit <- lm(immigSelf ~ 1, data = df_immi)
 # lmer null model
 immi_lmer <- lmer(immigSelf ~ (1|LAD), data = df_immi, REML = F)
 
+summ(immi_lmer)
+
 logLik(immi_fit)
 logLik(immi_lmer)
 2 * (logLik(immi_lmer) - logLik(immi_fit))
 
-# multivariate ------------------------------------------------
+# hypothesis vars only, testing improved fit from SH interaction --------------
 
-immi_multi <- lmer(immigSelf ~ male + white_british + 
-                     no_religion + edu_20plus +
-                     social_housing + private_renting + 
-                     homeowner + age + 
-                     c1_c2 + d_e + non_uk_born +
+# making interaction terms with scaled values
+df_immi <- df_immi %>% 
+  mutate(social_housing.affordability = social_housing * affordability,
+         homeowner.affordability = homeowner * affordability)
+
+immi_hypot <- lmer(immigSelf ~ homeowner.affordability +
+                     homeowner + affordability +
                      (1|LAD),
                    data = df_immi, REML = FALSE)
 
-summary(immi_multi)
+summary(immi_hypot)
 
-# including level 2 predictors  ------------------------------
+immi_hypot_sh <- lmer(immigSelf ~ social_housing.affordability +
+                        homeowner.affordability +
+                        social_housing + homeowner + affordability +
+                        (1|LAD),
+                      data = df_immi, REML = FALSE)
 
-immi_con <- lmer(immigSelf ~ male + white_british + 
-                   no_religion + edu_20plus +
-                   social_housing + private_renting + 
-                   homeowner + age + 
-                   c1_c2 + d_e + non_uk_born + 
-                   affordability + gdp_capita +
-                   pop_sqm_2021 + foreign_per_1000  + 
-                   over_65_pct + under_15_pct + 
-                   degree_pct + manuf_pct +
-                   (1|LAD),
-                 data = df_immi, REML = FALSE)
-summary(immi_con)
+summary(immi_hypot_sh)
 
-anova(immi_multi, immi_con)
+# improvement in model fit is significant
+anova(immi_hypot, immi_hypot_sh)
 
-# cross level interaction ------------------------------------------------------
+# including controls, testing for improvement from SH interaction -------------
 
-immi_int <- lmer(immigSelf ~ (social_housing * affordability) +
-                   (homeowner * affordability) +
+immi_hom <- lmer(immigSelf ~ homeowner.affordability +
+                   homeowner + affordability +
+                   social_housing +
                    male + white_british + 
                    no_religion + edu_20plus +
                    private_renting + age + 
@@ -160,9 +159,25 @@ immi_int <- lmer(immigSelf ~ (social_housing * affordability) +
                    degree_pct + manuf_pct +
                    (1|LAD),
                  data = df_immi, REML = FALSE)
+summary(immi_hom)
+
+immi_int <- lmer(immigSelf ~ social_housing + homeowner + private_renting +  
+                   affordability +
+                   male + white_british + 
+                   no_religion + edu_20plus +
+                   age + 
+                   c1_c2 + d_e + non_uk_born + 
+                   gdp_capita + pop_sqm_2021 + foreign_per_1000 + 
+                   over_65_pct + under_15_pct + 
+                   degree_pct + manuf_pct +
+                   social_housing.affordability + 
+                   homeowner.affordability +
+                   (1|LAD),
+                 data = df_immi, REML = FALSE)
 summary(immi_int)
 
-anova(immi_con, immi_int)
+# model fit is improved significantly according to chi square
+anova(immi_hom, immi_int)
 
 saveRDS(immi_int, file = "working/markdown_data/immi_int.RDS")
 
@@ -181,8 +196,6 @@ immi_log <- lmer(immigSelf ~ (social_housing * affordability_log) +
                  data = df_immi, REML = FALSE)
 summary(immi_log)
 
-AIC(immi_int, immi_log)
-
 # robustness check - with prices -------------------------------------
 
 immi_int_price <- lmer(immigSelf ~ (social_housing * prices) +
@@ -200,8 +213,9 @@ summary(immi_int_price)
 
 # robustness check - dummy for region ----------------------------------
 
-immi_reg <- lmer(immigSelf ~ (social_housing * affordability) +
-                   (homeowner * affordability) +
+immi_reg <- lmer(immigSelf ~ social_housing.affordability + 
+                   homeowner.affordability +
+                   social_housing + homeowner + affordability +
                    male + white_british + 
                    no_religion + edu_20plus +
                    private_renting + age + 
@@ -216,10 +230,12 @@ summary(immi_reg)
 anova(immi_int, immi_reg) 
 
 # incl. region makes very little difference to estimates
+housing_vars <- c("affordability","homeowner","social_housing",
+                  "homeowner.affordability","social_housing.affordability")
 tibble(
-  var = names(fixef(immi_int)),
-  no_region = fixef(immi_int),
-  incl_region = fixef(immi_reg)[!str_detect(names(fixef(immi_reg)),"region")]
+  var = housing_vars,
+  no_region = fixef(immi_int)[housing_vars],
+  incl_region = fixef(immi_reg)[housing_vars]
 ) %>% 
   pivot_longer(cols = no_region:incl_region,
                names_to = "model",
@@ -233,7 +249,7 @@ tibble(
   theme_minimal() +
   drop_y_gridlines()
 
-# robustness check - education age < uni ---------------------------
+# robustness check - uni > education age ---------------------------
 
 df_uni <- df %>%
   select(-tory_2019, -prices, -prices_raw, -income,
@@ -244,17 +260,24 @@ df_uni <- df %>%
 
 df_uni %>% select(uni, edu_20plus) %>% map_int(~sum(is.na(.)))
 
-df_uni <- df_uni %>% select(-edu_20plus) %>% na.omit()
+df_uni <- df_uni %>% 
+  select(-edu_20plus) %>% 
+  na.omit() %>% 
+  mutate(social_housing.affordability = social_housing * affordability,
+         homeowner.affordability = homeowner * affordability)
 
-immi_uni <- lmer(immigSelf ~ (social_housing * affordability) +
-                   (homeowner * affordability) +
+immi_uni <- lmer(immigSelf ~ social_housing + homeowner + private_renting +  
+                   affordability +
                    male + white_british + 
-                   no_religion + uni +
-                   private_renting + age + 
+                   no_religion + 
+                   age + 
                    c1_c2 + d_e + non_uk_born + 
                    gdp_capita + pop_sqm_2021 + foreign_per_1000 + 
                    over_65_pct + under_15_pct + 
                    degree_pct + manuf_pct +
+                   social_housing.affordability + 
+                   homeowner.affordability +
+                   uni + # adding uni
                    (1|LAD),
                  data = df_uni, REML = FALSE)
 
@@ -262,15 +285,22 @@ summary(immi_uni)
 
 # robustness check - including low income predictions -------------------------
 
-immi_inc <- lmer(immigSelf ~ (social_housing * affordability) +
-                   (homeowner * affordability) +
+df_inc <- df_inc %>% 
+  mutate(social_housing.affordability = social_housing * affordability,
+         homeowner.affordability = homeowner * affordability)
+
+immi_inc <- lmer(immigSelf ~ social_housing + homeowner + private_renting +  
+                   affordability +
                    male + white_british + 
                    no_religion + edu_20plus +
-                   private_renting + age + 
-                   c1_c2 + d_e + non_uk_born + income_full +
+                   age +
+                   c1_c2 + d_e + non_uk_born + 
                    gdp_capita + pop_sqm_2021 + foreign_per_1000 + 
                    over_65_pct + under_15_pct + 
                    degree_pct + manuf_pct +
+                   social_housing.affordability + 
+                   homeowner.affordability +
+                   income_full + # adding income
                    (1|LAD),
                  data = df_inc, REML = FALSE)
 summary(immi_inc)
@@ -295,18 +325,13 @@ uni_confint <- confint(immi_uni, method = "profile")
 inc_confint <- confint(immi_inc, method = "profile")
 
 plot_names <- tibble(
-  term = c("social_housing",
-           "affordability",
-           "homeowner", 
-           "private_renting",
-           "social_housing:affordability",
-           "affordability:homeowner"),
-  var_names = c("Social housing",
-                "Affordability",
+  term = c(housing_vars, "private_renting"),
+  var_names = c("Affordability",
                 "Homeowner",
-                "Private renting",
+                "Social housing",
+                "Affordability:Homeowner",
                 "Affordability:Social housing",
-                "Affordability:Homeowner")
+                "Private renting")
 )
 
 coef_plot_immi <- int_confint %>% 
@@ -462,31 +487,6 @@ int_plot <- p1 / p2
 int_plot
 
 saveRDS(int_plot, file = "working/markdown_viz/int_plot.RDS")
-
-# model for table --------------------------------------------------------------
-
-# making interaction terms with scaled values
-df_immi <- df_immi %>% 
-  mutate(social_housing.affordability = social_housing * affordability,
-         homeowner.affordability = homeowner * affordability)
-
-immi_tab <- lmer(immigSelf ~ social_housing + homeowner + private_renting +  
-                   affordability +
-                   male + white_british + 
-                   no_religion + edu_20plus +
-                   age + 
-                   c1_c2 + d_e + non_uk_born + 
-                   gdp_capita + pop_sqm_2021 + foreign_per_1000 + 
-                   over_65_pct + under_15_pct + 
-                   degree_pct + manuf_pct +
-                   social_housing.affordability + 
-                   homeowner.affordability +
-                   (1|LAD),
-                 data = df_immi, REML = FALSE)
-summary(immi_tab)
-summary(immi_int)
-
-saveRDS(immi_tab, file = "working/markdown_data/immi_tab.RDS")
 
 # models using housing cost measures ------------------------------------------
 

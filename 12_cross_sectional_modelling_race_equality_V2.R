@@ -55,17 +55,21 @@ df_equal <- df_equal %>%
   mutate(social_housing.affordability = social_housing * affordability,
          homeowner.affordability = homeowner * affordability)
 
-equal_int <- glmer(equality_too_far ~ social_housing.affordability +
-                     homeowner.affordability +
-                     social_housing + homeowner + affordability +
+equal_int <- glmer(equality_too_far ~ 
+                     social_housing + homeowner +  private_renting + 
+                     affordability +
                      male + white_british + no_religion + edu_20plus +
-                     private_renting + age +
+                     age +
                      c1_c2 + d_e + non_uk_born +
                      gdp_capita + pop_sqm_2021 + foreign_per_1000 +
                      over_65_pct + under_15_pct + degree_pct +
-                     manuf_pct + (1|LAD),
+                     manuf_pct + 
+                     social_housing.affordability +
+                     homeowner.affordability + (1|LAD),
                    data = df_equal, family = binomial("logit"))
 summary(equal_int)
+
+saveRDS(equal_int, file = "working/markdown_data/equal_int.RDS")
 
 # marginal effects
 marginals_main <- margins(equal_int, type = "response")
@@ -173,21 +177,3 @@ coef_plot_equality
 
 saveRDS(coef_plot_equality,
         file = "working/markdown_viz/coef_plot_equality.RDS")
-
-# for table ---------------------------------------
-
-equal_int2 <- glmer(equality_too_far ~ 
-                     social_housing + homeowner +  private_renting + 
-                     affordability +
-                     male + white_british + no_religion + edu_20plus +
-                     age +
-                     c1_c2 + d_e + non_uk_born +
-                     gdp_capita + pop_sqm_2021 + foreign_per_1000 +
-                     over_65_pct + under_15_pct + degree_pct +
-                     manuf_pct + 
-                     social_housing.affordability +
-                     homeowner.affordability + (1|LAD),
-                   data = df_equal, family = binomial("logit"))
-summary(equal_int2)
-
-saveRDS(equal_int2, file = "working/markdown_data/equal_int.RDS")
