@@ -60,6 +60,25 @@ Key findings:
 readRDS("working/markdown_viz/coef_plot_welfare.RDS")
 ```
 
+## Cross-sectional immigration control modelling
+
+Dependent variable and model:  
+
+* Question: "As Britain negotiates its future relationship with the EU, is it more important for the UK government to
+protect Britain's access to the single market or to gain full control of immigration?" Responses given on an 11-point scale where 0=Access to the single market, and 11=Control immigration       
+* Nested multilevel linear model with random intercepts for local authorities, with cross-level interactions between housing affordability and a) social renting and b) homeownership  
+
+Key findings:  
+
+* Positive interaction between social renting and affordability i.e. social renters in less affordable areas more likely to want to control immigration as opposed to access the single market  
+* No interaction with homeownership  
+* Interaction between social renting and affordability robust to the same robustness checks as described above 
+
+```{r, include=TRUE}
+# plot
+readRDS("working/markdown_viz/coef_plot_eu.RDS")
+```
+
 ## Cross-sectional racial equality modelling
 
 Dependent variable and model:  
@@ -81,9 +100,10 @@ readRDS("working/markdown_viz/coef_plot_equality.RDS")
 ```{r, include=TRUE, results = 'asis'}
 immi_int <- readRDS("working/markdown_data/immi_int.RDS")
 immi_bur <- readRDS("working/markdown_data/immig_burden_int.RDS")
+eu_int <- readRDS("working/markdown_data/immig_eu_int.RDS")
 equal_int <- readRDS("working/markdown_data/equal_int.RDS")
 
-tab_model(immi_int, immi_bur, equal_int, p.style = "stars", show.aic = T, 
+tab_model(immi_int, immi_bur, eu_int, equal_int, p.style = "stars", show.aic = T, 
           terms = c("social_housing", "homeowner", 
                     "private_renting", "affordability", 
                     "social_housing.affordability", 
@@ -92,7 +112,7 @@ tab_model(immi_int, immi_bur, equal_int, p.style = "stars", show.aic = T,
                           "Affordability",
                           "Social housing * Affordability", 
                           "Homeowner * Affordability"),
-          dv.labels = c("Anti-immigration", "Immigrants a welfare burden",  "Anti-racial equality"))
+          dv.labels = c("Anti-immigration", "Immigrants a welfare burden", "Control immigration", "Anti-racial equality"))
 ```
 
 
