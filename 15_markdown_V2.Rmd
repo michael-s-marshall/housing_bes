@@ -13,11 +13,11 @@ pacman::p_load(tidyverse, haven, jtools, lme4, lmerTest, sjPlot)
 rm(list = ls())
 ```
 
-## Cross-sectional anti-immigration modelling
+## Cross-sectional opposition to immigration modelling
 
 Dependent variable and model:  
 
-* Opposition to immigration measured on an 11-point scale from 0 (should allow many more immigrants) to 10 (should allow far fewer immigrants)  
+* Question: 'Some people think that the UK should allow *many more* immigrants to come to the UK to live and others think that the UK should allow *many fewer* immigrants. Where would you place yourself on this scale?'. Responses on an 11-point scale from 0 (should allow many more immigrants) to 10 (should allow far fewer immigrants) (note: original scale had 0 = far fewer immigrants, but scale has been reversed for analysis)  
 * Nested multilevel linear model with random intercepts for local authorities, with cross-level interactions between housing affordability and a) social renting and b) homeownership  
 * Affordability measured via the ratio of median house prices to median earnings in a local authority; as such, a higher number indicates less affordable housing  
 * Large amounts of missing data for two key individual level predictors: university educated, and income. As such, findings are presented for three models. The 'Main' model omits incomes and includes the age at which a respondent left education as a proxy for university education, thus maximising possible sample size. The 'Uni' model uses university education as a predictor instead of age left education, with missing observations removed via listwise deletion. And the 'Income' model includes income as a predictor, with missing values imputed via a Mincer regression model  
@@ -41,31 +41,12 @@ The figure below displays the interaction terms. It also shows that once control
 readRDS("working/markdown_viz/int_plot.RDS")
 ```
 
-## Cross-sectional immigrants a burden on welfare modelling
-
-Dependent variable and model:  
-
-* Binary indicator for whether respondents 'agree' or 'strongly agree' that immigrants are a burden on the welfare state    
-* Nested multilevel logit model with random intercepts for local authorities, with cross-level interactions between housing affordability and a) social renting and b) homeownership  
-
-Key findings:  
-
-* Positive interaction between social renting and affordability i.e. social renters in less affordable areas more likely to see immigrants as a welfare state burden  
-* No interaction with homeownership  
-* Interaction between social renting and affordability robust to the same robustness checks as described above  
-
-
-```{r, include=TRUE}
-# plot
-readRDS("working/markdown_viz/coef_plot_welfare.RDS")
-```
 
 ## Cross-sectional immigration control modelling
 
 Dependent variable and model:  
 
-* Question: "As Britain negotiates its future relationship with the EU, is it more important for the UK government to
-protect Britain's access to the single market or to gain full control of immigration?" Responses given on an 11-point scale where 0=Access to the single market, and 11=Control immigration       
+* Question: "As Britain negotiates its future relationship with the EU, is it more important for the UK government to protect Britain's access to the single market or to gain full control of immigration?" Responses given on an 11-point scale from 0 (access to the single market) to 10 (control immigration)  
 * Nested multilevel linear model with random intercepts for local authorities, with cross-level interactions between housing affordability and a) social renting and b) homeownership  
 
 Key findings:  
@@ -78,6 +59,11 @@ Key findings:
 # plot
 readRDS("working/markdown_viz/coef_plot_eu.RDS")
 ```
+
+```{r, include = TRUE}
+readRDS("working/markdown_viz/int_plot_eu.RDS")
+```
+
 
 ## Cross-sectional racial equality modelling
 
@@ -99,11 +85,10 @@ readRDS("working/markdown_viz/coef_plot_equality.RDS")
 
 ```{r, include=TRUE, results = 'asis'}
 immi_int <- readRDS("working/markdown_data/immi_int.RDS")
-immi_bur <- readRDS("working/markdown_data/immig_burden_int.RDS")
 eu_int <- readRDS("working/markdown_data/immig_eu_int.RDS")
 equal_int <- readRDS("working/markdown_data/equal_int.RDS")
 
-tab_model(immi_int, immi_bur, eu_int, equal_int, p.style = "stars", show.aic = T, 
+tab_model(immi_int, eu_int, equal_int, p.style = "stars", show.aic = T, 
           terms = c("social_housing", "homeowner", 
                     "private_renting", "affordability", 
                     "social_housing.affordability", 
@@ -112,7 +97,7 @@ tab_model(immi_int, immi_bur, eu_int, equal_int, p.style = "stars", show.aic = T
                           "Affordability",
                           "Social housing * Affordability", 
                           "Homeowner * Affordability"),
-          dv.labels = c("Anti-immigration", "Immigrants a welfare burden", "Control immigration", "Anti-racial equality"))
+          dv.labels = c("Fewer immigrants", "Control immigration", "Racial equality too far"))
 ```
 
 
@@ -146,6 +131,6 @@ tab_model(immi_long, p.style = "stars", show.aic = T,
                           "Social housing * Affordability between",
                           "Homeowner * Affordability between",
                           "Affordability within"),
-          dv.labels = c("Anti-immigration (longitudinal)"))
+          dv.labels = c("Fewer immigrants (longitudinal)"))
 ```
 

@@ -468,7 +468,7 @@ p1 <- immi_dummy %>%
   scale_colour_viridis_d(option = "D") +
   scale_fill_viridis_d(option = "D") +
   labs(x = NULL,
-       y = "Anti-immigration",
+       y = "Fewer immigrants",
        colour = "Tenure",
        fill = "Tenure") +
   coord_cartesian(ylim = c(5.5,8.5)) +
