@@ -223,23 +223,39 @@ edu <- edu %>%
          degree_pct = `Level 4 qualifications and above (percent)`) %>% 
   select(oslaua_code, degree_pct)
 
-edu_2011 <- read_csv("data/education_census_2011.csv")
+census_recon <- read_csv("data/census_reconciliation.csv")
+
+edu_2011 <- read_csv("data/degrees_2011.csv")
+
+edu_bind <- edu_2011 %>% 
+  rename(code_2011 = 3,
+         total = 5,
+         degree = 11) %>% 
+  left_join(census_recon, by = "code_2011") %>% 
+  filter(!is.na(code_2021)) %>% 
+  arrange(code_2021) %>% 
+  group_by(code_2021) %>% 
+  summarise(total = sum(total),
+            degrees = sum(degree),
+            .groups = "drop") %>% 
+  mutate(degree_pct = degrees / total) %>% 
+  select(code_2021, degree_pct) %>% 
+  rename(oslaua_code = code_2021)
 
 edu_2011 <- edu_2011 %>% 
-  rename(oslaua_code = 1,
-         degree_pct = 8) %>% 
-  select(oslaua_code, degree_pct)
-
-edu <- edu %>% 
-  left_join(
-    edu_2011, by = "oslaua_code", suffix = c("2021","2011")
-  ) %>% 
-  mutate(degree_pct_change = degree_pct2021 - degree_pct2011) %>% 
-  rename(degree_pct = degree_pct2021) %>% 
-  select(-degree_pct2011)
+  rename(oslaua_code = 3,
+         total = 5,
+         degree = 11) %>% 
+  mutate(degree_pct = degree / total) %>% 
+  select(oslaua_code, degree_pct) %>% 
+  bind_rows(edu_bind) %>% 
+  rename(degree_pct_2011 = degree_pct)
 
 df <- df %>% 
-  left_join(edu, by = "oslaua_code")
+  left_join(edu, by = "oslaua_code") %>% 
+  left_join(edu_2011, by = "oslaua_code") %>% 
+  mutate(degree_pct_change = degree_pct - degree_pct_2011) %>% 
+  select(-degree_pct_2011)
 
 # percentage manufacturing employment --------------------------------------
 
@@ -374,7 +390,7 @@ df$edu_20plus[is.na(df$p_education_age)] <- NA
 
 df %>% count(male, gender)
 df %>% count(uni, p_edlevel)
-df %>% count(white, p_ethnicity)
+df %>% count(white_british, p_ethnicity)
 df %>% count(no_religion, p_religion)
 df %>% count(c1_c2, d_e, p_socgrade)
 df %>% count(p_housing, homeowner, social_housing, private_renting)

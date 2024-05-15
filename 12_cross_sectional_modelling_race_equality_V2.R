@@ -61,9 +61,9 @@ equal_int <- glmer(equality_too_far ~
                      male + white_british + no_religion + edu_20plus +
                      age +
                      c1_c2 + d_e + non_uk_born +
-                     gdp_capita + pop_sqm_2021 + foreign_per_1000 +
+                     gdp_capita + foreign_per_1000 + # pop_sqm_2021 + 
                      over_65_pct + under_15_pct + degree_pct +
-                     manuf_pct + 
+                     # manuf_pct + 
                      social_housing.affordability +
                      homeowner.affordability + (1|LAD),
                    data = df_equal, family = binomial("logit"))
@@ -91,9 +91,10 @@ equal_uni <- glmer(equality_too_far ~ social_housing.affordability +
                      male + white_british + no_religion + uni +
                      private_renting + age +
                      c1_c2 + d_e + non_uk_born +
-                     gdp_capita + pop_sqm_2021 + foreign_per_1000 +
+                     gdp_capita + foreign_per_1000 + # pop_sqm_2021 +
                      over_65_pct + under_15_pct + degree_pct +
-                     manuf_pct + (1|LAD),
+                     #manuf_pct + 
+                     (1|LAD),
                    data = df_equal_uni, family = binomial("logit"))
 summary(equal_uni)
 
@@ -114,9 +115,10 @@ equal_inc <- glmer(equality_too_far ~ social_housing.affordability +
                      male + white_british + no_religion + edu_20plus +
                      private_renting + age +
                      c1_c2 + d_e + non_uk_born + income_full +
-                     gdp_capita + pop_sqm_2021 + foreign_per_1000 +
+                     gdp_capita + foreign_per_1000 + # pop_sqm_2021 +
                      over_65_pct + under_15_pct + degree_pct +
-                     manuf_pct + (1|LAD),
+                     #manuf_pct + 
+                     (1|LAD),
                    data = df_inc, family = binomial("logit"))
 summary(equal_inc)
 
