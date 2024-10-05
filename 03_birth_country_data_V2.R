@@ -54,8 +54,8 @@ bc_2021 <- read_csv("data/Birth country data/birth_country_2021.csv",
 bc_2021 %>% map_chr(class)
 bc_2021 <- bc_2021 %>% 
   rename(oslaua_code = `Area Code`,
-         total_pop = `All\nEstimate`,
-         uk_pop = `United Kingdom\nEstimate`) %>% 
+         total_pop = `All\r\nEstimate`,
+         uk_pop = `United Kingdom\r\nEstimate`) %>% 
   mutate(
     foreign_pop = total_pop - uk_pop,
     pop_1000 = total_pop / 1000,
